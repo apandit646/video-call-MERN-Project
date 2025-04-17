@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { UseSocket } from "../providers/Socket";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,7 @@ export const Home = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = useCallback(() => {
     if (!email) {
       setError("Please enter your email address");
       return;
@@ -38,13 +38,16 @@ export const Home = () => {
         setError("Connection timeout. Please try again.");
       }
     }, 5000);
-  };
+  }, [email, room, socket, loading]);
 
-  const handleRoomJoin = (roomId) => {
-    console.log("Room joined successfully:", roomId);
-    setLoading(false);
-    navigate(`/room/${roomId}`);
-  };
+  const handleRoomJoin = useCallback(
+    (roomId) => {
+      console.log("Room joined successfully:", roomId);
+      setLoading(false);
+      navigate(`/room/${roomId}`);
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     socket.on("joined-room", (data) => {
@@ -62,7 +65,7 @@ export const Home = () => {
       socket.off("joined-room");
       socket.off("error-joining-room");
     };
-  }, [socket]);
+  }, [socket, handleJoinRoom, handleRoomJoin, setError, setLoading, navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
